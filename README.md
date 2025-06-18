@@ -29,6 +29,7 @@ This repo includes examples for:
 
 ### Examples
 
+- [Block disposable emails](https://github.com/kinde-starter-kits/workflow-examples/blob/main/preUserRegistration/blockDisposableEmails.ts) - Allows you to block users from signing up with disposable email domains.
 - [Drip feed migration](https://github.com/kinde-starter-kits/workflow-examples/blob/main/existingPassword/dripFeedMigrationWorkflow.ts) - Shows how to check a password against an external database before creating the user in Kinde.
 - [Sync passwords to another system](https://github.com/kinde-starter-kits/workflow-examples/blob/main/newPassword/securelySyncPasswordWorkflow.ts) - Use encryption keys to securely keep passwords in sync between systems.
 - [Custom password validation](https://github.com/kinde-starter-kits/workflow-examples/blob/main/newPassword/customPasswordValidationWorkflow.ts) - Shows how to validate a password against your own rules.

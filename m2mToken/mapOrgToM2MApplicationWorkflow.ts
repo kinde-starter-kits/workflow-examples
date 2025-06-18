@@ -3,7 +3,7 @@ import {
   WorkflowSettings,
   WorkflowTrigger,
   createKindeAPI,
-  m2mTokenCustomClaims,
+  m2mTokenClaims
 } from "@kinde/infrastructure";
 
 export const workflowSettings: WorkflowSettings = {
@@ -61,7 +61,7 @@ export default async function Workflow(event: onM2MTokenGeneratedEvent) {
   });
 
   // set up types for the custom claims
-  const m2mToken = m2mTokenCustomClaims<{
+  const m2mToken = m2mTokenClaims<{
     applicationId: string;
     orgName: string;
     orgCode: string;
