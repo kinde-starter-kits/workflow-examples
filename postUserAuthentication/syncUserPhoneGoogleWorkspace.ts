@@ -65,8 +65,7 @@ export default async function handlePostAuth(event: onPostAuthenticationEvent) {
 
     const phoneAttr = attributeStatements
         .flatMap((s) => s.attributes ?? [])
-        .find((a) => a.name?.toLowerCase().trim() === googlePhoneAttributeName);
-
+        .find((a) => (a.name ?? "").toLowerCase().trim() === googlePhoneAttributeName);
     const phoneValue = phoneAttr?.values?.[0]?.value?.trim() || null;
     if (!phoneValue) return;
 
