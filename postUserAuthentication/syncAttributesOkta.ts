@@ -41,10 +41,14 @@ import {
 // * user_type      (for userType)
 // * groups         (for groups)
 //
-// If you choose different keys, update the corresponding property key constants in the code:
-// * `phonePropertyKey`
-// * `userTypePropertyKey`
-// * `groupsPropertyKey`
+// If you use different SAML attribute names or Kinde property keys,
+// update the `attributeSyncConfig` object in the code below.
+//
+// Each object in the array defines a mapping:
+// - `samlName`: The attribute name from the Okta SAML assertion (case-insensitive).
+// - `kindeKey`: The corresponding user property key in Kinde.
+// - `multiValue`: Set to `true` if the attribute can have multiple values (like groups),
+//   which will be joined by a comma.
 //
 // Important: when creating these properties, make sure the **“Private” option is toggled off**
 // so they are included in tokens.
@@ -75,6 +79,12 @@ type SamlValue = { value?: string };
 type SamlAttribute = { name?: string; values?: SamlValue[] };
 type SamlAttributeStatement = { attributes?: SamlAttribute[] };
 
+const attributeSyncConfig = [
+    { samlName: "phone_number", kindeKey: "phone_number", multiValue: false },
+    { samlName: "user_type", kindeKey: "user_type", multiValue: false },
+    { samlName: "groups", kindeKey: "groups", multiValue: true },
+];
+
 export default async function handlePostAuth(event: onPostAuthenticationEvent) {
     const connectionId = event.context.auth.connectionId;
     const oktaConnectionId = getEnvironmentVariable("OKTA_CONNECTION_ID")?.value;
@@ -85,47 +95,41 @@ export default async function handlePostAuth(event: onPostAuthenticationEvent) {
             ?.attributeStatements as SamlAttributeStatement[] | undefined;
     if (!attributeStatements?.length) return;
 
-    const attrs: SamlAttribute[] = attributeStatements.flatMap((s) => s.attributes ?? []);
-    const findAttr = (names: string[]) =>
-        attrs.find((a) => {
-            const n = a.name?.toLowerCase().trim() ?? "";
-            return names.some((want) => n === want.toLowerCase());
-        });
+    const samlAttributesMap = (attributeStatements ?? [])
+        .flatMap((statement) => statement.attributes ?? [])
+        .reduce((acc, attr) => {
+            const name = attr.name?.toLowerCase().trim();
+            if (name) {
+                const values = (attr.values ?? [])
+                    .map((v) => v.value?.trim())
+                    .filter((v): v is string => !!v);
+                if (values.length > 0) {
+                    acc.set(name, values);
+                }
+            }
+            return acc;
+        }, new Map<string, string[]>());
 
-    const phoneAttrNames = ["phone_number"];
-    const userTypeAttrNames = ["user_type"];
-    const groupsAttrNames = ["groups"];
+    const propertiesToUpdate: Record<string, string> = {};
 
-    const getFirstString = (a?: SamlAttribute | null) =>
-        (a?.values?.[0]?.value ?? "").toString().trim() || null;
+    for (const config of attributeSyncConfig) {
+        const values = samlAttributesMap.get(config.samlName);
+        if (values && values.length > 0) {
+            if (config.multiValue) {
+                propertiesToUpdate[config.kindeKey] = values.join(",");
+            } else {
+                propertiesToUpdate[config.kindeKey] = values[0];
+            }
+        }
+    }
 
-    const getAllStrings = (a?: SamlAttribute | null) =>
-        (a?.values ?? [])
-            .map((v) => (v.value ?? "").toString().trim())
-            .filter(Boolean);
-
-    const phoneValue = getFirstString(findAttr(phoneAttrNames));
-    const userTypeValue = getFirstString(findAttr(userTypeAttrNames));
-
-    const groupsArray = getAllStrings(findAttr(groupsAttrNames));
-    const groupsValue = groupsArray.length ? groupsArray.join(",") : null;
-
-    if (!phoneValue && !userTypeValue && !groupsValue) return;
+    if (Object.keys(propertiesToUpdate).length === 0) return;
 
     const kindeAPI = await createKindeAPI(event);
     const userId = event.context.user.id;
 
-    const phonePropertyKey = "phone_number";
-    const userTypePropertyKey = "user_type";
-    const groupsPropertyKey = "groups";
-
-    const properties: Record<string, string> = {};
-    if (phoneValue) properties[phonePropertyKey] = phoneValue;
-    if (userTypeValue) properties[userTypePropertyKey] = userTypeValue;
-    if (groupsValue) properties[groupsPropertyKey] = groupsValue;
-
     await kindeAPI.patch({
         endpoint: `users/${userId}/properties`,
-        params: { properties },
+        params: { properties: propertiesToUpdate },
     });
 }
