@@ -119,18 +119,13 @@ export default async function handlePostAuth(event: onPostAuthenticationEvent) {
     const userTypePropertyKey = "user_type";
     const groupsPropertyKey = "groups";
 
-    const setProp = async (key: string, value: string | null) => {
-        if (!value) return;
-        await kindeAPI.put({
-            endpoint: `users/${userId}/properties/${encodeURIComponent(
-                key
-            )}?value=${encodeURIComponent(value)}`,
-        });
-    };
+    const properties: Record<string, string> = {};
+    if (phoneValue) properties[phonePropertyKey] = phoneValue;
+    if (userTypeValue) properties[userTypePropertyKey] = userTypeValue;
+    if (groupsValue) properties[groupsPropertyKey] = groupsValue;
 
-    await Promise.all([
-        setProp(phonePropertyKey, phoneValue),
-        setProp(userTypePropertyKey, userTypeValue),
-        setProp(groupsPropertyKey, groupsValue),
-    ]);
+    await kindeAPI.patch({
+        endpoint: `users/${userId}/properties`,
+        params: { properties },
+    });
 }
