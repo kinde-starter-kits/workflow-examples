@@ -57,7 +57,7 @@ const attributeSyncConfig = [
 ];
 
 export default async function handlePostAuth(event: onPostAuthenticationEvent) {
-    const protocol = event.context.auth.provider.protocol;
+    const protocol = event.context?.auth?.provider?.protocol;
     if (!protocol || protocol !== "saml") return;
 
     const attributeStatements =
