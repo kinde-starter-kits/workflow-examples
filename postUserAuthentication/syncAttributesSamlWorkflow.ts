@@ -18,7 +18,9 @@ import {
 //    * user_type
 //    * groups
 //
-//    Note: Update the `attributeSyncConfig` object in the code below if your IdP uses different names.
+//    Note: In the `attributeSyncConfig` object below, update the `samlNames` array
+//    for each property to include all possible attribute names your IdP(s) might send
+//    (e.g., ["phone_number", "phone", "mobilephone"]).
 //
 // 3. Create an M2M application in Kinde with the following scope enabled:
 //    * update:user_properties
@@ -51,9 +53,21 @@ type SamlAttribute = { name?: string; values?: SamlValue[] };
 type SamlAttributeStatement = { attributes?: SamlAttribute[] };
 
 const attributeSyncConfig = [
-    { samlName: "phone_number", kindeKey: "phone_number", multiValue: false },
-    { samlName: "user_type", kindeKey: "user_type", multiValue: false },
-    { samlName: "groups", kindeKey: "groups", multiValue: true },
+    {
+        samlNames: ["phone_number", "phone", "mobilephone"],
+        kindeKey: "phone_number",
+        multiValue: false,
+    },
+    {
+        samlNames: ["user_type", "usertype"],
+        kindeKey: "user_type",
+        multiValue: false,
+    },
+    {
+        samlNames: ["groups", "group"],
+        kindeKey: "groups",
+        multiValue: true,
+    },
 ];
 
 export default async function handlePostAuth(event: onPostAuthenticationEvent) {
@@ -83,12 +97,20 @@ export default async function handlePostAuth(event: onPostAuthenticationEvent) {
     const propertiesToUpdate: Record<string, string> = {};
 
     for (const config of attributeSyncConfig) {
-        const values = samlAttributesMap.get(config.samlName);
-        if (values && values.length > 0) {
+        let foundValues: string[] | undefined;
+        for (const name of config.samlNames) {
+            const values = samlAttributesMap.get(name);
+            if (values && values.length > 0) {
+                foundValues = values;
+                break;
+            }
+        }
+
+        if (foundValues) {
             if (config.multiValue) {
-                propertiesToUpdate[config.kindeKey] = values.join(",");
+                propertiesToUpdate[config.kindeKey] = foundValues.join(",");
             } else {
-                propertiesToUpdate[config.kindeKey] = values[0];
+                propertiesToUpdate[config.kindeKey] = foundValues[0];
             }
         }
     }
