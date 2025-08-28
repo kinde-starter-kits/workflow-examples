@@ -63,10 +63,10 @@ import {
 // 7. Select **Save**.
 
 export const workflowSettings: WorkflowSettings = {
-    id: "postAuthentication",
+    id: "syncUserOktaAttributes",
     name: "OktaAttributesSync",
     failurePolicy: {
-        action: "stop",
+        action: "continue",
     },
     trigger: WorkflowTrigger.PostAuthentication,
     bindings: {
@@ -132,4 +132,17 @@ export default async function handlePostAuth(event: onPostAuthenticationEvent) {
         endpoint: `users/${userId}/properties`,
         params: { properties: propertiesToUpdate },
     });
+
+    try {
+        await kindeAPI.patch({
+            endpoint: `users/${userId}/properties`,
+            params: { properties: propertiesToUpdate },
+        });
+    } catch (err) {
+        console.error("Failed to sync Okta attributes for user", {
+            userId,
+            propertiesToUpdate,
+            message: err instanceof Error ? err.message : String(err),
+        });
+    }
 }
