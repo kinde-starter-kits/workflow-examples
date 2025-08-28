@@ -43,6 +43,9 @@ This repo includes examples for:
 - [Deny plan change](https://github.com/kinde-starter-kits/workflow-examples/blob/main/planSelection/denyPlanChangeWorkflow.ts) - Prevent a user from changing plans. Useful if they aren't eligible to if in breach of limits
 - [Deny plan cancellation](https://github.com/kinde-starter-kits/workflow-examples/blob/main/planCancellationRequest/denyPlanCancellation.ts) - Prevent a user from cancelling their plan. Useful if you need to do manual deprovisioning
 - [Check IP with AbuseIPDB](https://github.com/kinde-starter-kits/workflow-examples/blob/main/postUserAuthentication/checkIPWithAbuseIPDBWorkflow.ts) - Checks IP of user logging in with AbuseIPDB and blocks login if abuse confidence rating is too high.
+- [Sync attributes from SAML](https://github.com/kinde-starter-kits/workflow-examples/blob/main/postUserAuthentication/syncAttributesSamlWorkflow.ts) - Syncs user attributes and groups from a SAML assertion into Kinde custom user properties (e.g., phone number, user type, groups). Works with any SAML connection.
+- [Sync user phone from Google Workspace](https://github.com/kinde-starter-kits/workflow-examples/blob/main/postUserAuthentication/syncUserPhoneGoogleWorkspaceWorkflow.ts) - Syncs a user’s phone number from a Google Workspace SAML attribute into a Kinde custom user property.
+- [Sync attributes from Okta](https://github.com/kinde-starter-kits/workflow-examples/blob/main/postUserAuthentication/syncAttributesOktaWorkflow.ts) - Syncs user attributes (phone number, user type) and groups from an Okta SAML assertion into Kinde custom user properties.
 
 Each example includes:
 
