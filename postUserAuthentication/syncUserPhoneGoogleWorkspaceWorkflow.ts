@@ -35,10 +35,10 @@ import {
 //   - If you use a different key, change `phonePropertyKey` in the code.
 
 export const workflowSettings: WorkflowSettings = {
-    id: "postAuthentication",
+    id: "syncUserPhoneGoogleWorkspace",
     name: "GoogleWorkspacePhoneSync",
     failurePolicy: {
-        action: "stop",
+        action: "continue",
     },
     trigger: WorkflowTrigger.PostAuthentication,
     bindings: {
@@ -74,7 +74,15 @@ export default async function handlePostAuth(event: onPostAuthenticationEvent) {
 
     const phonePropertyKey = "phone_number";
 
-    await kindeAPI.put({
-        endpoint: `users/${userId}/properties/${phonePropertyKey}?value=${encodeURIComponent(phoneValue)}`
-    });
+    try {
+        await kindeAPI.put({
+            endpoint: `users/${userId}/properties/${phonePropertyKey}?value=${encodeURIComponent(phoneValue)}`
+        });
+    } catch (err) {
+        console.error("Phone sync failed", {
+            userId,
+            phonePropertyKey,
+            message: err instanceof Error ? err.message : String(err),
+        });
+    }
 }
