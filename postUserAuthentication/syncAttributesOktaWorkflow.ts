@@ -128,11 +128,6 @@ export default async function handlePostAuth(event: onPostAuthenticationEvent) {
     const kindeAPI = await createKindeAPI(event);
     const userId = event.context.user.id;
 
-    await kindeAPI.patch({
-        endpoint: `users/${userId}/properties`,
-        params: { properties: propertiesToUpdate },
-    });
-
     try {
         await kindeAPI.patch({
             endpoint: `users/${userId}/properties`,
