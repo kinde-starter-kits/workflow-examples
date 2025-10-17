@@ -109,7 +109,7 @@ export default async function mapEntraIdClaimsWorkflow(
     officeLocation: "office_location",
     mobilePhone: "mobile_phone",
     businessPhones: "business_phones",
-    uti: "kp_usr_city",
+    city: "kp_usr_city",
     ctry: "country",
     postalCode: "postal_code",
     state: "state",
