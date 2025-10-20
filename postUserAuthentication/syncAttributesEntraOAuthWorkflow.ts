@@ -49,8 +49,7 @@ export const workflowSettings: WorkflowSettings = {
   trigger: WorkflowTrigger.PostAuthentication,
   bindings: {
     "kinde.env": {},
-    url: {},
-    "kinde.mfa": {}
+    "url": {}
   },
 };
 
@@ -60,7 +59,6 @@ export default async function mapEntraIdClaimsWorkflow(
   const provider = event.context?.auth?.provider;
   const protocol = provider?.protocol || "";
 
-  console.log("Event data:", JSON.stringify(event, null, 2));
 
   // Only process OAuth2 connections from Entra ID (Microsoft)
   if (protocol !== "oauth2") {
@@ -68,29 +66,36 @@ export default async function mapEntraIdClaimsWorkflow(
     return;
   }
 
-  // Check if this is a Microsoft/Entra ID connection
-  const providerName =
-    provider?.provider?.toLowerCase() ||
-    "";
+  // Check if this is a Microsoft/Entra ID connection using a strict whitelist
+  // This might need tweaking according to your use case
+  const rawProvider = provider?.provider ?? "";
+  const providerName = String(rawProvider).trim().toLowerCase();
+  const allowedProviders = new Set([
+    "microsoft",
+    "entra",
+    "azure",
+    "azure_ad",
+    "azuread",
+  ]);
 
-  if (
-    !providerName.includes("microsoft") &&
-    !providerName.includes("entra") &&
-    !providerName.includes("azure") &&
-    !providerName.includes("azure_ad")
-  ) {
+  if (!allowedProviders.has(providerName)) {
     console.log(
-      `Connection ${providerName} is not a Microsoft/Entra ID connection, skipping`
+      `Connection provider '${rawProvider}' is not an allowed Microsoft/Entra ID provider, skipping`
     );
     return;
   }
 
   const userId = event.context?.user?.id;
+
+  if (!userId) {
+    console.error("User ID is missing from event context");
+    throw new Error("User ID is required for claims mapping");
+  }
+
   console.log(`Processing Entra ID OAuth2 claims for user: ${userId}`);
 
   // Extract claims
   const claims = provider?.data?.idToken?.claims || {};
-  console.log("Raw claims received:", claims);
 
   // Map of Entra ID claims -> Kinde properties
   // Some are examples; adjust based on your needs
@@ -128,7 +133,7 @@ export default async function mapEntraIdClaimsWorkflow(
         ? claimValue.join(", ")
         : String(claimValue);
       console.log(
-        `Mapping claim ${claimName} -> ${propertyKey}: ${propertiesToUpdate[propertyKey]}`
+        `Mapping claim ${claimName} -> ${propertyKey}`
       );
     }
   }
@@ -138,14 +143,14 @@ export default async function mapEntraIdClaimsWorkflow(
     propertiesToUpdate["entra_groups"] = claims.groups.join(", ");
   }
 
-  // Always store last sync timestamp
-  propertiesToUpdate["entra_last_sync"] = new Date().toISOString();
-
-  // Nothing to update
+  // If there are no claim-derived properties to update, skip making an API call
   if (Object.keys(propertiesToUpdate).length === 0) {
-    console.log("No properties to update");
+    console.log("Nothing to update from claims; skipping property sync");
     return;
   }
+
+  // Store last sync timestamp only when there are other updates
+  propertiesToUpdate["entra_last_sync"] = new Date().toISOString();
 
   // Create the Kinde API client (uses your M2M credentials)
   const kindeAPI = await createKindeAPI(event);
@@ -161,6 +166,7 @@ export default async function mapEntraIdClaimsWorkflow(
     );
   } catch (error) {
     console.error("Error updating user properties:", error);
+    throw error;
   }
 
   console.log(`Completed Entra ID claims mapping for user ${userId}`);
