@@ -1,4 +1,4 @@
-/** 
+/**
  * This workflow maps user claims from Microsoft Entra ID (OAuth2 / OpenID Connect)
  * into Kinde custom user properties.
  *
@@ -7,23 +7,29 @@
  *
  * Setup steps:
  *
- * 1. In your Microsoft Entra ID app registration, configure the user attributes (claims)
- *    you want included in the ID token.
+ * 1. In your Microsoft Entra ID app registration:
+ *       • Configure the user attributes (claims) you want included in the ID token.
+ *        
  *
- * 2. In Kinde, create matching custom user property keys to store these values.
+ * 2. In Kinde:
+ *       • Create matching **custom user property keys** for each claim you want to store.
+ *         For instance, create a custom property named `usr_username` to map the Entra ID claim.
+ *
+ *       • To make a custom property appear in the ID token:
+ *             Go to your Kinde **Application → Tokens → ID Token**
+ *             and **add any custom properties** you want included (e.g., `usr_username`).
  *
  * 3. Create a Machine-to-Machine (M2M) application in Kinde with the following scope enabled:
  *       • update:user_properties
  *
- *    Then, in your workflow’s Environment Variables, configure the following (values from the M2M app):
+ *    Then, in your workflow's Environment Variables, configure the following (values from the M2M app):
  *       • KINDE_WF_M2M_CLIENT_ID
  *       • KINDE_WF_M2M_CLIENT_SECRET    ← mark this variable as sensitive
- *
  *
  * 4. Deploy this workflow. Each time a user signs in through your Entra ID OAuth2 connection,
  *    the workflow will:
  *       • read the claims from the ID token
- *       • map them to your configured Kinde user properties
+ *       • map them to your configured Kinde user properties (e.g., usr_username, department, job_title)
  *       • optionally capture Entra ID groups
  *       • and record a timestamp of the last synchronization.
  *
@@ -32,6 +38,7 @@
  *
  * Trigger: user:post_authentication
  */
+
 
 
 import {
@@ -103,24 +110,7 @@ export default async function mapEntraIdClaimsWorkflow(
     given_name: "kp_usr_first_name",
     family_name: "kp_usr_last_name",
     email: "kp_usr_email",
-    name: "kp_usr_display_name",
-    preferred_username: "kp_usr_username",
-    oid: "entra_object_id",
-    tid: "entra_tenant_id",
-    upn: "entra_upn",
-    unique_name: "entra_unique_name",
-    jobTitle: "job_title",
-    department: "department",
-    officeLocation: "office_location",
-    mobilePhone: "mobile_phone",
-    businessPhones: "business_phones",
-    city: "kp_usr_city",
-    ctry: "country",
-    postalCode: "postal_code",
-    state: "state",
-    streetAddress: "street_address",
-    companyName: "company_name",
-    employeeId: "employee_id",
+    preferred_username: "usr_username",
   };
 
   const propertiesToUpdate: Record<string, string> = {};
