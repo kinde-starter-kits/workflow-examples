@@ -43,6 +43,7 @@ This repo includes examples for:
 - [Deny plan change](https://github.com/kinde-starter-kits/workflow-examples/blob/main/planSelection/denyPlanChangeWorkflow.ts) - Prevent a user from changing plans. Useful if they aren't eligible to if in breach of limits
 - [Deny plan cancellation](https://github.com/kinde-starter-kits/workflow-examples/blob/main/planCancellationRequest/denyPlanCancellation.ts) - Prevent a user from cancelling their plan. Useful if you need to do manual deprovisioning
 - [Check IP with AbuseIPDB](https://github.com/kinde-starter-kits/workflow-examples/blob/main/postUserAuthentication/checkIPWithAbuseIPDBWorkflow.ts) - Checks IP of user logging in with AbuseIPDB and blocks login if abuse confidence rating is too high.
+- [Sync SAML attributes](https://github.com/kinde-starter-kits/workflow-examples/blob/main/postUserAuthentication/syncAttributesSamlWorkflow.ts) - Sync user attributes and groups from a SAML assertion with Kinde.
 
 Each example includes:
 
