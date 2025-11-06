@@ -99,6 +99,8 @@ export default async function Workflow(event: onExistingPasswordProvidedEvent) {
           identities: [
             {
               type: "email",
+              // Mark email as verified since user authenticated via external system
+              is_verified: true,
               details: {
                 email: providedEmail,
               },
