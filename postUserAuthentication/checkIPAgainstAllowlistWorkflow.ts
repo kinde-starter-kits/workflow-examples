@@ -130,7 +130,7 @@ export default async function handlePostAuth(event: onPostAuthenticationEvent) {
 
     // Validate IP address
     if (!isValidIpAddress(ip)) {
-      console.warn(`Invalid or private IP address detected: ${ip}. Access denied.`);
+      console.warn(`Invalid or private IP address detected. Access denied.`);
       denyAccess(`Access denied: Invalid or private IP address.`);
       return;
     }
@@ -140,7 +140,7 @@ export default async function handlePostAuth(event: onPostAuthenticationEvent) {
     // 3. Deny or allow access 
     if (!allowList.includes(ip)) {
       console.warn(`IP address ${ip} is not in the allowlist. Access denied.`);
-      denyAccess(`Access denied: IP address ${ip} is not in the allowlist.`);
+      denyAccess(`Access denied: IP address is not in the allowlist.`);
       return;
     }
 
