@@ -83,7 +83,7 @@ function validateAllowList(allowList: string[]): void {
  */
 function handleExceptionError(errorMessage: string, error?: any): void {
   console.error(`Check Against IP Address Workflow Error: ${errorMessage}`, error); 
-  denyAccess(`Access blocked due to an issue: ${errorMessage}`);
+  denyAccess(`Access denied due to a configuration or validation error.`);
 }
 
 /**
