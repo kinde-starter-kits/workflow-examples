@@ -120,7 +120,9 @@ export default async function handlePostAuth(event: onPostAuthenticationEvent) {
     validateAllowList(allowList);
 
     // 2. Get and validate IP address
-    let ip = event.request.ip?.split(',')[0].trim() ?? 'unknown';
+    const rawIp = event.request?.ip ?? '';
+    let ip = rawIp.split(',')[0]?.trim() || 'unknown';
+
     if (testFalsePositive) {
       ip = '64.227.0.197'; // A known "allowed" IP for testing purposes
       console.log('Test false positive is enabled. Overriding IP for testing purposes.');
