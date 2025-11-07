@@ -98,7 +98,16 @@ function isValidIpAddress(ip: string): boolean {
 
   // Basic IPv4 validation
   const ipv4Regex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
-  return ipv4Regex.test(ip);
+  if (!ipv4Regex.test(ip)) return false;
+
+  // Reject private, loopback, and link-local ranges
+  const [a, b] = ip.split('.').map(Number);
+  if (a === 10) return false;                    // 10.0.0.0/8
+  if (a === 172 && b >= 16 && b <= 31) return false; // 172.16.0.0/12
+  if (a === 192 && b === 168) return false;      // 192.168.0.0/16
+  if (a === 127) return false;                   // 127.0.0.0/8
+  if (a === 169 && b === 254) return false;      // 169.254.0.0/16
+  return true;
 }
 
 
