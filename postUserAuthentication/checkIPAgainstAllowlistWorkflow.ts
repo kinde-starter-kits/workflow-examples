@@ -82,7 +82,7 @@ function validateAllowList(allowList: string[]): void {
  * @param error The original error object (optional).
  */
 function handleExceptionError(errorMessage: string, error?: any): void {
-  console.error(`Check Againts IP Address Workflow Error: ${errorMessage}`, error); 
+  console.error(`Check Against IP Address Workflow Error: ${errorMessage}`, error); 
   denyAccess(`Access blocked due to an issue: ${errorMessage}`);
 }
 
@@ -139,7 +139,7 @@ export default async function handlePostAuth(event: onPostAuthenticationEvent) {
 
     // 3. Deny or allow access 
     if (!allowList.includes(ip)) {
-      console.warn(`IP address ${ip} is not in the allowlist. Access denied.`);
+      console.warn(`IP address is not in the allowlist. Access denied.`);
       denyAccess(`Access denied: IP address is not in the allowlist.`);
       return;
     }
