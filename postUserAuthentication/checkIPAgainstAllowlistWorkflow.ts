@@ -17,7 +17,7 @@
  *  - allowList: Update the `allowList` array with the desired IP addresses to allow.
  *
  * Testing:
- *  - Enable ALLOWLIST_TEST_FALSE_POSITIVE (or set testFalsePositive = true)
+ *  - Set testFalsePositive = true in the configuration
  *    to force the workflow to use a known test IP for functional verification.
  *  - Use an authentication event with `request.ip` in CSV format (e.g.
  *    "203.0.113.5, 10.0.0.1") to verify the first IP segment is used.
