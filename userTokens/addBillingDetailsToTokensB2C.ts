@@ -92,8 +92,8 @@ const ensureArray = <T,>(v: unknown): T[] => (Array.isArray(v) ? (v as  T[]) : [
  *     Docs: https://docs.kinde.com/developer-tools/kinde-api/about-m2m-scopes/
  * 
  * 2. Add the M2M application's client ID and secret to the Kinde environment variables:
- *      - KINDE_M2M_CLIENT_ID
- *      - KINDE_M2M_CLIENT_SECRET (mark as sensitive)
+ *      - KINDE_WF_M2M_CLIENT_ID  
+ *      - KINDE_WF_M2M_CLIENT_SECRET (mark as sensitive)    
  * 
  *      Docs: https://docs.kinde.com/build/env-variables/store-environment-variables/
  * 
