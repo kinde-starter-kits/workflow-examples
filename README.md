@@ -43,6 +43,7 @@ This repo includes examples for:
 - [Deny plan change](https://github.com/kinde-starter-kits/workflow-examples/blob/main/planSelection/denyPlanChangeWorkflow.ts) - Prevent a user from changing plans. Useful if they aren't eligible to if in breach of limits
 - [Deny plan cancellation](https://github.com/kinde-starter-kits/workflow-examples/blob/main/planCancellationRequest/denyPlanCancellation.ts) - Prevent a user from cancelling their plan. Useful if you need to do manual deprovisioning
 - [Check IP with AbuseIPDB](https://github.com/kinde-starter-kits/workflow-examples/blob/main/postUserAuthentication/checkIPWithAbuseIPDBWorkflow.ts) - Checks IP of user logging in with AbuseIPDB and blocks login if abuse confidence rating is too high.
+- [Include billing info in user tokens](https://github.com/kinde-starter-kits/workflow-examples/blob/main/userTokens/addBillingDetailsToTokensB2C.ts) - Fetches a user’s billing information during token generation and adds it to the user tokens as a billingDetails custom claim. 
 
 Each example includes:
 
