@@ -70,7 +70,6 @@ interface AgreementsResponse {
 
 interface OrgBillingClaim {
     customer_id: string | null;
-    org_billing: OrganizationResponse['billing'];
     entitlements: Entitlement[];
     agreements: Agreement[];
 }
@@ -146,14 +145,15 @@ export default async function OrganizationBillingWorkflow(event: WorkflowEvent) 
                 endpoint: `billing/entitlements?customer_id=${customerId}&expand=plans`
             }),
             // Only call agreements if we could not get it from the previous call
-            !initialAgreements
+            initialAgreements.length === 0
             ? kindeAPI.get<AgreementsResponse>({
                 endpoint: `billing/agreements?customer_id=${customerId}`
             }): Promise.resolve(null)  
         ]);
 
         const entitlements = ensureArray<Entitlement>(entResp?.data?.entitlements);
-        const agreements = agrResp?.data?.agreements || initialAgreements;
+        const agreements =
++            agrResp?.data?.agreements ? ensureArray<Agreement>(agrResp.data.agreements) : initialAgreements;
 
         // [3] Construct the B2B Billing Claim Object
         const billingClaimObject: OrgBillingClaim = {
