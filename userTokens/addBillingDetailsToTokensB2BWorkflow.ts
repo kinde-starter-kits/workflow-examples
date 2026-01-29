@@ -36,7 +36,7 @@ interface OrganizationResponse {
     code?: string;
     name?: string;
     billing?: {
-        customer_id?: string;
+        billing_customer_id?: string;
         has_payment_details?: boolean;
         [key: string]: unknown;
     };
