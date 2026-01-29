@@ -124,9 +124,9 @@ export default async function OrganizationBillingWorkflow(event: WorkflowEvent) 
 
         // [1] Get Organization Details (with Billing expanded)
         // Endpoint: GET /api/v1/organization/{org_code}?expand=billing
-        const { data: orgData } = await kindeAPI.get<OrganizationResponse>({
+        const { data: orgData } = (await kindeAPI.get({
             endpoint: `organization?code=${orgCode}&expand=billing`
-        });
+        })) as { data: OrganizationResponse }; 
 
         const customerId = orgData?.billing?.billing_customer_id ?? null;
         let initialAgreements = ensureArray<Agreement>(orgData?.billing?.agreements);
@@ -141,9 +141,10 @@ export default async function OrganizationBillingWorkflow(event: WorkflowEvent) 
         // - GET /api/v1/billing/entitlements?customer_id={id}&expand=plans
         // - GET /api/v1/billing/agreements?customer_id={id}
         const [entResp, agrResp] = await Promise.all([
-            kindeAPI.get<EntitlementsResponse>({
+            kindeAPI.get({
                 endpoint: `billing/entitlements?customer_id=${customerId}&expand=plans`
-            }),
+            }) as Promise<{ data: EntitlementsResponse }>,
+            
             // Only call agreements if we could not get it from the previous call
             initialAgreements.length === 0
             ? kindeAPI.get<AgreementsResponse>({
