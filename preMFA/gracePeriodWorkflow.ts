@@ -11,7 +11,7 @@ import {
 const MFAPolicy: {[key: string]: MFAEnforcementPolicy} = {
   Required: "required",
   Skip: "skip"
-}
+} as const;
 
 // The setting for this workflow
 export const workflowSettings: WorkflowSettings = {
