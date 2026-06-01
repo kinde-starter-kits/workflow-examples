@@ -3,6 +3,7 @@ import {
     WorkflowSettings,
     WorkflowTrigger,
     createKindeAPI,
+    getEnvironmentVariable,
 } from "@kinde/infrastructure";
 
 /**
@@ -23,18 +24,57 @@ import {
  * 3. Assign the Billing Admin role to organization creators.
  * 4. Enable organization creation and joining via orgCode or allowed domains.
  * 5. Set up a Kinde M2M application with the following scopes:
- *    - read:organizations
- *    - create:meter_usage
+ *   * read:organizations
+ *   * create:meter_usage
  * 6. Add the following environment variables in Kinde:
- *    - KINDE_WF_M2M_CLIENT_ID
- *    - KINDE_WF_M2M_CLIENT_SECRET (set as sensitive)
+ *    * KINDE_WF_M2M_CLIENT_ID
+ *    * KINDE_WF_M2M_CLIENT_SECRET (set as sensitive)
+ *    * KINDE_WF_BILLING_PLAN_CODE (the plan code to track, e.g. "standard-organization-plan")
  *
  * Usage:
  * - This workflow should be used to report seat usage whenever a user is added to an organization.
  * - It can be extended to handle removals or scheduled reconciliation jobs for true-up billing.
  *
+ * Known limitations:
+ *
+ * This workflow counts seats only for users who join via the org-code self-signup
+ * flow (where `orgCode` is present in `event.request.authUrlParams`). It does not
+ * cover two other join paths, by design of the PostAuthentication trigger:
+ *
+ * 1. Domain-based auto-add — users auto-joined to an org because their email
+ *    domain matches the org's allowed domains. No `orgCode` is present in the
+ *    auth URL params for this flow.
+ *
+ * 2. Admin-invited / API-added / imported users — users added to an org by an
+ *    admin via the dashboard, the management API, or a bulk import. For these
+ *    users, `isNewUserRecordCreated` is `false` (Kinde already has their record),
+ *    so the workflow returns early.
+ *
+ * The PostAuthentication trigger runs before organization access is checked
+ * (per Kinde docs: "Organization access has not been checked"), so the user's
+ * confirmed org memberships are not yet available via the management API at
+ * this point. To capture the flows above, pair this workflow with a scheduled
+ * reconciliation job that diffs actual org membership against billed seat counts.
+ *
  * For more details, see the Kinde B2B SaaS billing guide.
  */
+
+interface BillingAgreement {
+    plan_code: string;
+    agreement_id: string;
+    [k: string]: unknown;
+}
+
+interface OrganizationBilling {
+    agreements?: BillingAgreement[];
+    [k: string]: unknown;
+}
+
+interface Organization {
+    code?: string;
+    billing?: OrganizationBilling;
+    [k: string]: unknown;
+}
 
 export const workflowSettings: WorkflowSettings = {
     id: "trackOrgSeatUsage",
@@ -62,85 +102,92 @@ export default async function trackOrgSeatUsage(event: onPostAuthenticationEvent
     const isNewKindeUser = event?.context?.auth?.isNewUserRecordCreated ?? false;
     const orgCode = event?.request?.authUrlParams?.orgCode;
 
-    console.log('[DEBUG] orgCode from authUrlParams:', orgCode);
-    console.log('[DEBUG] isNewKindeUser:', isNewKindeUser);
-
     // Early return if required properties are missing
     if (!orgCode || !event?.context?.user?.id) {
-        console.log('[DEBUG] Missing required parameters (orgCode or user ID). Exiting workflow safely.');
         return;
     }
 
     // Only update usage if this is a new user record
     if (!isNewKindeUser) {
-        console.log('[DEBUG] User is not new. No seat usage update needed. Exiting workflow safely.');
+        console.info('Skipping metered usage update: not a new user record', { orgCode });
         return;
     }
 
     const kindeUserId = event.context.user.id;
-    console.log('[DEBUG] New Kinde user ID:', kindeUserId);
 
     // Create Kinde Management API client
     const kindeAPI = await createKindeAPI(event);
-    console.log('[DEBUG] Kinde API client created');
 
     // Fetch organization details (including billing info)
-    const orgResponse = await kindeAPI.get({
-        endpoint: `organization?code=${orgCode}&expand=billing`,
-    });
-    console.log('[DEBUG] orgResponse:', orgResponse);
+    let orgResponse;
+    try {
+        orgResponse = await kindeAPI.get<Organization>({
+            endpoint: `organization?code=${orgCode}&expand=billing`,
+        });
+    } catch (error) {
+        console.error('Failed to fetch organization', {
+            orgCode,
+            error: (error as Error)?.message ?? error,
+        });
+        throw error;
+    }
+
+    if (!orgResponse?.data) {
+        console.info('Skipping metered usage update: organization not found', { orgCode });
+        return;
+    }
 
     const organization = orgResponse.data;
-    console.log('[DEBUG] organization:', organization);
-    const planCode = "standard-organization-plan"; // Update if your plan code differs
-    console.log('[DEBUG] planCode:', planCode);
+    console.info('Organization found', { orgCode });
+
+    const planCode = getEnvironmentVariable("KINDE_WF_BILLING_PLAN_CODE")?.value;
+    if (!planCode) {
+        throw new Error(
+            "KINDE_WF_BILLING_PLAN_CODE environment variable is not set. " +
+            "Set it to the billing plan code this workflow should track " +
+            "(e.g. \"standard-organization-plan\")."
+        );
+    }
 
     // Ensure billing data exists
     if (!organization.billing || !organization.billing.agreements || organization.billing.agreements.length === 0) {
-        console.log(
-            `[INFO] Organization ${orgCode} does not have billing configured or no agreements found. Skipping metered usage update.`
-        );
+        console.info('Skipping metered usage update: no billing configured', { orgCode });
         return;
     }
 
     // Find the correct billing agreement for the plan
     const agreement = organization.billing.agreements.find(
-        (agr: any) => agr.plan_code === planCode
+        (agr: BillingAgreement) => agr.plan_code === planCode
     );
-    console.log('[DEBUG] agreement:', agreement);
 
     if (!agreement) {
-        console.log(
-            `[INFO] Organization ${orgCode} is not on plan ${planCode}. Skipping metered usage update.`
-        );
+        console.info('Skipping metered usage update: organization not on tracked plan', { orgCode });
         return;
     }
 
     const billingCustomerAgreementId = agreement.agreement_id;
-    console.log('[DEBUG] billingCustomerAgreementId:', billingCustomerAgreementId);
-
     const billingFeatureCode = "user"; // Must match your metered feature key
-    console.log('[DEBUG] billingFeatureCode:', billingFeatureCode);
 
     // Update metered usage for the organization (increment seat count)
-    console.log('[DEBUG] Posting metered usage update', {
-        customer_agreement_id: billingCustomerAgreementId,
-        billing_feature_code: billingFeatureCode,
-        meter_value: "1",
-        meter_type_code: "delta",
-    });
-    const meterUsageResponse = await kindeAPI.post({
-        endpoint: `billing/meter_usage`,
-        params: {
-            customer_agreement_id: billingCustomerAgreementId,
-            billing_feature_code: billingFeatureCode,
-            meter_value: "1",
-            meter_type_code: "delta",
-        },
-    });
-    console.log('[DEBUG] meterUsageResponse:', meterUsageResponse);
+    try {
+        await kindeAPI.post({
+            endpoint: `billing/meter_usage`,
+            params: {
+                customer_agreement_id: billingCustomerAgreementId,
+                billing_feature_code: billingFeatureCode,
+                meter_value: "1",
+                meter_type_code: "delta",
+            },
+        });
 
-    console.log(
-        `[INFO] Metered usage updated for organization ${orgCode} and user ${kindeUserId}`
-    );
+        console.info('Metered usage updated', { orgCode, kindeUserId });
+    } catch (error) {
+        console.error('Failed to update metered usage', {
+            orgCode,
+            kindeUserId,
+            billingCustomerAgreementId,
+            error: (error as Error)?.message ?? error,
+        });
+        throw error;
+    }
 }
