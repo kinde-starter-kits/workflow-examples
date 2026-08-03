@@ -4,6 +4,7 @@ import {
   WorkflowTrigger,
   accessTokenCustomClaims,
   getEnvironmentVariable,
+  fetch,
 } from "@kinde/infrastructure";
 
 // The setting for this workflow
