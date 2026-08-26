@@ -56,20 +56,21 @@ export default async function Workflow(
     console.log(
       "No disposable email domains configured, allowing registration"
     );
+    return;
+  }
 
-    const disposableEmailDomainsArray = disposableEmailDomains
-      .split(",")
-      .map((domain) => domain.trim());
+  const disposableEmailDomainsArray = disposableEmailDomains
+    .split(",")
+    .map((domain) => domain.trim());
 
-    const userEmailDomain = event.context.user.email.split("@")[1];
+  const userEmailDomain = event.context.user.email.split("@")[1];
 
-    if (disposableEmailDomainsArray.includes(userEmailDomain)) {
-      console.log(
-        `Blocking registration for disposable email domain: ${userEmailDomain}`
-      );
-      denyAccess("Disposable email domain detected");
-    } else {
-      console.log(`Allowing registration for email domain: ${userEmailDomain}`);
-    }
+  if (disposableEmailDomainsArray.includes(userEmailDomain)) {
+    console.log(
+      `Blocking registration for disposable email domain: ${userEmailDomain}`
+    );
+    denyAccess("Disposable email domain detected");
+  } else {
+    console.log(`Allowing registration for email domain: ${userEmailDomain}`);
   }
 }
