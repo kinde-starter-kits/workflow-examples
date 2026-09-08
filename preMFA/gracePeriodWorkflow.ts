@@ -5,7 +5,13 @@ import {
   setEnforcementPolicy,
   getEnvironmentVariable,
   MFAEnforcementPolicy,
+  createKindeAPI,
 } from "@kinde/infrastructure";
+
+const MFAPolicy: {[key: string]: MFAEnforcementPolicy} = {
+  Required: "required",
+  Skip: "skip"
+} as const;
 
 // The setting for this workflow
 export const workflowSettings: WorkflowSettings = {
@@ -17,6 +23,7 @@ export const workflowSettings: WorkflowSettings = {
   bindings: {
     "kinde.fetch": {}, // Required for external API calls
     "kinde.env": {}, // required to access your environment variables
+    "kinde.mfa": {}, // required to use setEnforcementPolicy
     url: {}, // required for url params
   },
 };
