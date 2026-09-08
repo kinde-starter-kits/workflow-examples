@@ -26,6 +26,7 @@ This repo includes examples for:
 | `/postUserAuthentication` | a user completes single factor authentication (e.g Google auth) |
 | `/preMFA` | before checking if MFA is required |
 | `/userTokens` | ID and access tokens are generated |
+| `/captureIdpClaimsToTokens` | ID and access tokens are generated |
 | `/planSelection` | A user tries to change plan |
 | `/planCancellationRequest` | A user requests to cancel their subscription |
 
@@ -39,6 +40,7 @@ This repo includes examples for:
 - [TrustPath impossible travel](https://github.com/kinde-starter-kits/workflow-examples/blob/main/postUserAuthentication/impossibleTravelWorkflow.ts) - Evaluate user login risk using TrustPath's API by checking for "impossible travel" patterns based on IP and recent login activity. If high risk is detected, access is blocked proactively.
 - [Set a grace period for MFA](https://github.com/kinde-starter-kits/workflow-examples/blob/main/preMFA/gracePeriodWorkflow.ts) - Don't ask for MFA for a set period of time after a user has logged in.
 - [Add custom claims to access token](https://github.com/kinde-starter-kits/workflow-examples/blob/main/userTokens/customClaimsAccessTokenWorkflow.ts) - Call an external API to get data to add as custom claims to the user access token.
+- [Capture IdP claims to tokens](https://github.com/kinde-starter-kits/workflow-examples/blob/main/captureIdpClaimsToTokens/CaptureIdpClaimsWorkflow.ts) - Automatically capture ALL claims from social identity providers (Google, Microsoft, etc.) and include them in user tokens without hardcoding specific claim names.
 - [Map M2M applications to organizations](https://github.com/kinde-starter-kits/workflow-examples/blob/main/m2mToken/mapOrgToM2MApplicationWorkflow.ts) - Shows how to map M2M applications to organizations. Useful if using Kinde for B2B API key management
 - [Deny plan change](https://github.com/kinde-starter-kits/workflow-examples/blob/main/planSelection/denyPlanChangeWorkflow.ts) - Prevent a user from changing plans. Useful if they aren't eligible to if in breach of limits
 - [Deny plan cancellation](https://github.com/kinde-starter-kits/workflow-examples/blob/main/planCancellationRequest/denyPlanCancellation.ts) - Prevent a user from cancelling their plan. Useful if you need to do manual deprovisioning
