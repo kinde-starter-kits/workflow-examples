@@ -44,6 +44,7 @@ This repo includes examples for:
 - [Deny plan cancellation](https://github.com/kinde-starter-kits/workflow-examples/blob/main/planCancellationRequest/denyPlanCancellation.ts) - Prevent a user from cancelling their plan. Useful if you need to do manual deprovisioning
 - [Check IP with AbuseIPDB](https://github.com/kinde-starter-kits/workflow-examples/blob/main/postUserAuthentication/checkIPWithAbuseIPDBWorkflow.ts) - Checks IP of user logging in with AbuseIPDB and blocks login if abuse confidence rating is too high.
 - [Include billing info in user tokens](https://github.com/kinde-starter-kits/workflow-examples/blob/main/userTokens/addBillingDetailsToTokensB2C.ts) - Fetches a user’s billing information during token generation and adds it to the user tokens as a billingDetails custom claim. 
+- [Track Organization seat usage](https://github.com/kinde-starter-kits/workflow-examples/blob/main/billing/trackOrgSeatUsageWorkflow.ts) - Updates metered seat usage for B2B SaaS organizations in Kinde when a new user joins. Ensures accurate per-user billing by incrementing the 'user' feature count after authentication.
 
 Each example includes:
 
